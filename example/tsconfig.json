@@ -1,0 +1,10 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "urmobo-module": ["../src/index"],
+      "urmobo-module/*": ["../src/*"]
+    }
+  }
+}

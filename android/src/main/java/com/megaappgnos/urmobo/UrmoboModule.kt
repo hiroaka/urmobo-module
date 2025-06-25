@@ -1,50 +1,104 @@
 package com.megaappgnos.urmobo
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Handler
+import android.os.Looper
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import expo.modules.kotlin.Promise
 import java.net.URL
 
 class UrmoboModule : Module() {
-  // Each module class must implement the definition function. The definition consists of components
-  // that describes the module's functionality and behavior.
-  // See https://docs.expo.dev/modules/module-api for more details about available components.
-  override fun definition() = ModuleDefinition {
-    // Sets the name of the module that JavaScript code will use to refer to the module. Takes a string as an argument.
-    // Can be inferred from module's class name, but it's recommended to set it explicitly for clarity.
-    // The module will be accessible from `requireNativeModule('UrmoboModule')` in JavaScript.
-    Name("UrmoboModule")
 
-    // Sets constant properties on the module. Can take a dictionary or a closure that returns a dictionary.
-    Constants(
-      "PI" to Math.PI
-    )
+    private var deviceInfoPromise: Promise? = null
 
-    // Defines event names that the module can send to JavaScript.
-    Events("onChange")
-
-    // Defines a JavaScript synchronous function that runs the native code on the JavaScript thread.
-    Function("hello") {
-      "Hello world! 👋"
+    // BroadcastReceiver para receber a resposta do Urmobo
+    private val deviceInfoReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            try {
+                val imei = intent.getStringExtra("imei") ?: ""
+                val serialNumber = intent.getStringExtra("serial_number") ?: ""
+                val deviceId = intent.getStringExtra("device_id") ?: ""
+                
+                val resultMap = mapOf(
+                    "imei" to imei,
+                    "serialNumber" to serialNumber,
+                    "deviceId" to deviceId
+                )
+                
+                deviceInfoPromise?.resolve(resultMap)
+                deviceInfoPromise = null
+            } catch (e: Exception) {
+                deviceInfoPromise?.reject("ERROR", e.message, e)
+                deviceInfoPromise = null
+            }
+        }
     }
+    
+    override fun definition() = ModuleDefinition {
+        Name("UrmoboModule")
 
-    // Defines a JavaScript function that always returns a Promise and whose native code
-    // is by default dispatched on the different thread than the JavaScript runtime runs on.
-    AsyncFunction("setValueAsync") { value: String ->
-      // Send an event to JavaScript.
-      sendEvent("onChange", mapOf(
-        "value" to value
-      ))
-    }
+        Constants(
+            "PI" to Math.PI
+        )
 
-    // Enables the module to be used as a native view. Definition components that are accepted as part of
-    // the view definition: Prop, Events.
-    View(UrmoboModuleView::class) {
-      // Defines a setter for the `url` prop.
-      Prop("url") { view: UrmoboModuleView, url: URL ->
-        view.webView.loadUrl(url.toString())
-      }
-      // Defines an event that the view can send to JavaScript.
-      Events("onLoad")
+        // Especificar explicitamente todos os eventos
+        Events("onChange", "onDeviceInfo")
+
+        Function("hello") {
+            "Hello world! 👋"
+        }
+
+        AsyncFunction("setValueAsync") { value: String ->
+            sendEvent("onChange", mapOf(
+                "value" to value
+            ))
+        }
+
+        AsyncFunction("getDeviceInfo") { promise: Promise ->
+            try {
+                // Registrar o BroadcastReceiver se ainda não estiver registrado
+                appContext.reactContext?.registerReceiver(
+                    deviceInfoReceiver,
+                    IntentFilter("com.cliente.RESPONSE_INFO")
+                )
+                
+                // Salvar a promise para resolver quando a resposta chegar
+                deviceInfoPromise = promise
+                
+                // Enviar o Intent para o Urmobo
+                val intent = Intent("com.urmobo.mdm.GET_DEVICE_DATA")
+                appContext.reactContext?.sendBroadcast(intent)
+                
+                // Usar Handler com Looper.getMainLooper() para o timeout
+                Handler(Looper.getMainLooper()).postDelayed({
+                    if (deviceInfoPromise != null) {
+                        deviceInfoPromise?.reject("TIMEOUT", "Não foi recebida resposta do Urmobo", null)
+                        deviceInfoPromise = null
+                    }
+                }, 10000) // 10 segundos de timeout
+                
+            } catch (e: Exception) {
+                promise.reject("ERROR", e.message, e)
+            }
+        }
+
+        OnDestroy {
+            try {
+                appContext.reactContext?.unregisterReceiver(deviceInfoReceiver)
+            } catch (e: Exception) {
+                // Ignorar se o receiver já foi desregistrado
+            }
+        }
+
+        View(UrmoboModuleView::class) {
+            Prop("url") { view: UrmoboModuleView, url: URL ->
+                view.webView.loadUrl(url.toString())
+            }
+            Events("onLoad")
+        }
     }
-  }
 }

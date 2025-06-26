@@ -1,15 +1,13 @@
-import { registerWebModule, NativeModule } from 'expo';
+import { EventEmitter } from 'expo-modules-core';
 
-import { UrmoboModuleEvents } from './UrmoboModule.types';
+const emitter = new EventEmitter({} as any);
 
-class UrmoboModule extends NativeModule<UrmoboModuleEvents> {
-  PI = Math.PI;
+export default {
+  PI: Math.PI,
   async setValueAsync(value: string): Promise<void> {
-    this.emit('onChange', { value });
-  }
+    emitter.emit('onChange', { value });
+  },
   hello() {
     return 'Hello world! 👋';
-  }
-}
-
-export default registerWebModule(UrmoboModule, 'UrmoboModule');
+  },
+};

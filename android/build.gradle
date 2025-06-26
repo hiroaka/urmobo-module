@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
 
 group = 'com.megaappgnos.urmobo'
-version = '0.1.0'
+version = '0.6.0'
 
 def expoModulesCorePlugin = new File(project(":expo-modules-core").projectDir.absolutePath, "ExpoModulesCorePlugin.gradle")
 apply from: expoModulesCorePlugin
@@ -21,7 +21,6 @@ if (useManagedAndroidSdkVersions) {
     ext.safeExtGet = { prop, fallback ->
       rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
     }
-     agpVersion = "7.3.1"
   }
   project.android {
     compileSdkVersion safeExtGet("compileSdkVersion", 34)
@@ -36,7 +35,7 @@ android {
   namespace "com.megaappgnos.urmobo"
   defaultConfig {
     versionCode 1
-    versionName "0.1.0"
+    versionName "0.6.0"
   }
   lintOptions {
     abortOnError false

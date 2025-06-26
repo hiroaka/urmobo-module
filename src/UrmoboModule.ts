@@ -9,6 +9,7 @@ declare class UrmoboModule extends NativeModule<UrmoboModuleEvents> {
   setValueAsync(value: string): Promise<void>;
   getDeviceInfo(): Promise<DeviceInfo>;
 }
+export { default as withUrmoboModule } from "../plugin/withUrmobo";
 
 // This call loads the native module object from the JSI.
 export default requireNativeModule<UrmoboModule>("UrmoboModule");

@@ -8,8 +8,11 @@ import android.os.Handler
 import android.os.Looper
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import androidx.core.content.ContextCompat
+
 import expo.modules.kotlin.Promise
 import java.net.URL
+import	android.os.Build
 
 class UrmoboModule : Module() {
 
@@ -59,12 +62,25 @@ class UrmoboModule : Module() {
         }
 
         AsyncFunction("getDeviceInfo") { promise: Promise ->
+            
+            appContext.reactContext?.let { context ->
             try {
-                // Registrar o BroadcastReceiver se ainda não estiver registrado
-                appContext.reactContext?.registerReceiver(
-                    deviceInfoReceiver,
-                    IntentFilter("com.cliente.RESPONSE_INFO")
-                )
+
+                
+
+
+                //checking version of the sdk and registering receiver with RECEIVER_EXPORTED
+                if (Build.VERSION.SDK_INT >= 34 && context.getApplicationInfo().targetSdkVersion >= 34) {
+                    context.registerReceiver(deviceInfoReceiver, IntentFilter("com.cliente.RESPONSE_INFO"), ContextCompat.RECEIVER_EXPORTED)
+                }else{
+                    context.registerReceiver(deviceInfoReceiver, IntentFilter("com.cliente.RESPONSE_INFO"))
+                }
+        
+                // // Registrar o BroadcastReceiver se ainda não estiver registrado
+                // .registerReceiver(
+                //     deviceInfoReceiver,
+                //     IntentFilter("com.cliente.RESPONSE_INFO")
+                // )
                 
                 // Salvar a promise para resolver quando a resposta chegar
                 deviceInfoPromise = promise
@@ -84,6 +100,7 @@ class UrmoboModule : Module() {
             } catch (e: Exception) {
                 promise.reject("ERROR", e.message, e)
             }
+            } ?: promise.reject("ERROR", "React context is null")
         }
 
         OnDestroy {

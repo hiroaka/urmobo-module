@@ -7,6 +7,7 @@ declare class UrmoboModule extends NativeModule<UrmoboModuleEvents> {
   PI: number;
   hello(): string;
   setValueAsync(value: string): Promise<void>;
+  sendIntent(value: string): Promise<void>;
   getDeviceInfo(): Promise<DeviceInfo>;
 }
 export { default as withUrmoboModule } from "../plugin/withUrmobo";

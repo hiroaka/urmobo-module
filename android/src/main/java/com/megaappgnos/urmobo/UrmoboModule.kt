@@ -48,13 +48,54 @@ class UrmoboModule : Module() {
         Constants("PI" to Math.PI)
 
         // Especificar explicitamente todos os eventos
-        Events("onChange", "onDeviceInfo")
+        Events("onChange", "onDeviceInfo", "onSendIntent")
 
         Function("hello") { "Hello world! 👋" }
 
         AsyncFunction("setValueAsync") { value: String ->
             sendEvent("onChange", mapOf("value" to value))
         }
+
+        AsyncFunction("sendIntent") { value: String ->
+            appContext.reactContext?.let { context ->
+                try {
+                    // Criar o Intent para solicitar dados do dispositivo
+                    val request = Intent("com.urmobo.mdm.GET_DEVICE_DATA")
+                    request.setPackage("com.urmobo.mdm")
+                    
+                    // Criar um PendingIntent para receber a resposta
+                    val replyIntent = Intent("com.cliente.RESPONSE_INFO")
+                    
+                    // Flags para o PendingIntent
+                    val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+                    } else {
+                        android.app.PendingIntent.FLAG_UPDATE_CURRENT
+                    }
+                    
+                    // Obter o PendingIntent para o broadcast
+                    val replyPending = android.app.PendingIntent.getBroadcast(
+                        context, 0, replyIntent, flags
+                    )
+                    
+                    // Anexar o PendingIntent ao Intent original
+                    request.putExtra("UrmoboReply", replyPending)
+                    
+                    // Enviar o broadcast
+                    context.sendBroadcast(request)
+                    
+                    // Enviar evento para o JavaScript
+                    sendEvent("onSendIntent", mapOf("value" to value))
+                    
+                } catch (e: Exception) {
+                    // Lidar com erros
+                    sendEvent("onSendIntent", mapOf("error" to e.message))
+                }
+            } ?: run {
+                sendEvent("onSendIntent", mapOf("error" to "React context is null"))
+            }
+        }
+
 
         AsyncFunction("getDeviceInfo") { promise: Promise ->
             appContext.reactContext?.let { context ->

@@ -24,7 +24,19 @@ export default function App() {
       setLoading(false);
     }
   };
-
+  const handleSendIntent = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      await UrmoboModule.sendIntent('Hello from JS!');
+      console.log('handleSendIntent:', []);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error getting device info:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.container}>
@@ -48,7 +60,14 @@ export default function App() {
         <Group name="Events">
           <Text>{onChangePayload?.value}</Text>
         </Group>
-        
+        { /** enivar um intent */}
+        <Group name="Enviar um intent">
+          <Button
+            title={loading ? "Carregando..." : "Enviar Intent"}
+            onPress={handleSendIntent}
+            disabled={loading}
+          />
+        </Group>
         {/* Nova seção para Device Info */}
         <Group name="Device Info">
           <Button

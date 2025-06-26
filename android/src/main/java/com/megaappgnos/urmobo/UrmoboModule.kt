@@ -50,7 +50,7 @@ class UrmoboModule : Module() {
         // Especificar explicitamente todos os eventos
         Events("onChange", "onDeviceInfo", "onSendIntent")
 
-        Function("hello") { "Hello world! 👋" }
+        Function("hello") { "Hello world3! 👋" }
 
         AsyncFunction("setValueAsync") { value: String ->
             sendEvent("onChange", mapOf("value" to value))
@@ -145,9 +145,6 @@ class UrmoboModule : Module() {
             }
         }
 
-        View(UrmoboModuleView::class) {
-            Prop("url") { view: UrmoboModuleView, url: URL -> view.webView.loadUrl(url.toString()) }
-            Events("onLoad")
-        }
+        
     }
 }

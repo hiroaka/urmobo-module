@@ -20,10 +20,11 @@ export function hello(): string {
   return UrmoboModule.hello();
 }
 
+//manda a intent para a urmobo, e ai começa a esperar a resposta de volta
 export function sendIntent(): string {
   return UrmoboModule.sendIntent();
 }
-
+//espera de retorno a intent de resposta da urmobo
 export function getDeviceInfo(): string {
   return UrmoboModule.getDeviceInfo();
 }

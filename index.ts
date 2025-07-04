@@ -11,6 +11,7 @@ import UrmoboModuleView from "./src/UrmoboModuleView";
 import {
   ChangeEventPayload,
   UrmoboModuleViewProps,
+  IDeviceInfo,
 } from "./src/UrmoboModule.types";
 
 // Get the native constant value.
@@ -25,7 +26,7 @@ export function sendIntent(): string {
   return UrmoboModule.sendIntent();
 }
 //espera de retorno a intent de resposta da urmobo
-export function getDeviceInfo(): string {
+export function getDeviceInfo(): IDeviceInfo {
   return UrmoboModule.getDeviceInfo();
 }
 
